@@ -1,0 +1,20 @@
+{
+  "name": "practice-vampire-surviors",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:tnuanchuay/practice-vampire-survior.git",
+  "author": "Tossapon Nuanchuay <ntossapo@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "webpack serve"
+  },
+  "devDependencies": {
+    "html-webpack-plugin": "^5.5.0",
+    "phaser": "^3.55.2",
+    "ts-loader": "^9.4.2",
+    "typescript": "^5.0.2",
+    "webpack": "^5.76.3",
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.13.1"
+  }
+}
