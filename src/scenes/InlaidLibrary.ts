@@ -22,16 +22,18 @@ export class InlaidLibraryBattleScene extends Scene {
 
     update(_: number, __: number): void {
         if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-160);
-
-        } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(160);
-
-        } else if (this.cursors.up.isDown) {
-            this.player.setVelocityY(-160);
-        } else if (this.cursors.down.isDown) {
-            this.player.setVelocityY(160);
-        } else {
+            this.player.setVelocityX(-260);
+        }
+        if (this.cursors.right.isDown) {
+            this.player.setVelocityX(260);
+        }
+        if (this.cursors.up.isDown) {
+            this.player.setVelocityY(-260);
+        }
+        if (this.cursors.down.isDown) {
+            this.player.setVelocityY(260);
+        }
+        if(this.cursors.down.isUp && this.cursors.up.isUp && this.cursors.left.isUp && this.cursors.right.isUp){
             this.player.set0Velocity();
         }
     }
