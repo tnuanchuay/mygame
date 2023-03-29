@@ -1,4 +1,5 @@
 import { Types, Game } from 'phaser';
+import { InlaidLibraryBattleScene } from './scenes/InlaidLibrary'
 
 export const config: Types.Core.GameConfig = {
     width: '100vw',
@@ -8,7 +9,7 @@ export const config: Types.Core.GameConfig = {
         default: 'arcade',
         arcade: {}
     },
-    scene: []
+    scene: [new InlaidLibraryBattleScene()]
 };
 
 export class VampireSurvior extends Game {
