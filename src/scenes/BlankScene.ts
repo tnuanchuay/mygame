@@ -20,6 +20,6 @@ export class BlankScene extends Scene {
     }
 
     update(_: number, __: number): void {
-        this.player.Walk(this.cursors);
+        this.player.Update(this.cursors);
     }
 }
