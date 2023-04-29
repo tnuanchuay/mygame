@@ -1,11 +1,10 @@
 import { Physics, Scene, Types } from "phaser";
-import { config } from "../../game";
 import { PlayerState } from "./playerState";
 
 export interface Character {
     Preload: () => void;
     Create: () => void;
-    Object: () => void;
+    Object: () => Physics.Arcade.Sprite;
     Update: (cursors: Types.Input.Keyboard.CursorKeys) => void;
 }
 
@@ -98,7 +97,7 @@ export class Player implements Character {
         if(this.sprit.state === PlayerState.Attack){
             this.sprit.setVelocityX(0);
             this.sprit.setVelocityY(0);
-            
+
             return
         }
 
