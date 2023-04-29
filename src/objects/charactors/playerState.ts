@@ -1,4 +1,5 @@
 export enum PlayerState {
     Idle,
-    Run
+    Run,
+    Attack,
 }

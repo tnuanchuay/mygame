@@ -7,7 +7,7 @@ export class BlankScene extends Scene {
 
     constructor() {
         super('Scene1');
-        this.player = new Player(this, 400);
+        this.player = new Player(this, 600);
     }
 
     preload() {

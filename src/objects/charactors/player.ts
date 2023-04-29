@@ -13,12 +13,10 @@ export class Player implements Character {
     private scene: Scene;
     private sprit: Physics.Arcade.Sprite;
     private speed: number;
-    private state: PlayerState;
 
     constructor(scene: Scene, speed: number) {
         this.scene = scene;
         this.speed = speed;
-        this.state = PlayerState.Idle;
     }
 
     Preload() {
@@ -28,7 +26,11 @@ export class Player implements Character {
 
         this.scene.load.spritesheet('hero_run', 'assets/hero/player_run48x48.png', {
             frameWidth: 48, frameHeight: 48,
-        })
+        });
+
+        this.scene.load.spritesheet('hero_sword_atk', 'assets/hero/player_swordatk64x64.png', {
+            frameWidth: 64, frameHeight: 64,
+        });
     }
 
     Create() {
@@ -42,7 +44,7 @@ export class Player implements Character {
                 start: 0,
                 end: 9,
             }),
-            repeat: -1
+            repeat: -1,
         });
 
         this.scene.anims.create({
@@ -51,14 +53,27 @@ export class Player implements Character {
                 start: 0,
                 end: 7,
             }),
-            repeat: -1
+            repeat: -1,
+        });
+
+        this.scene.anims.create({
+            key: 'hero_sword_atk',
+            frames: this.scene.anims.generateFrameNames('hero_sword_atk', {
+                start: 0,
+                end: 5,
+            }),
         });
 
         this.sprit.anims.play('hero_idle');
-
-        this.sprit.setScale(1.5)
-        this.sprit.setOrigin(0.5, 0.5)
+        this.sprit.setScale(3);
+        this.sprit.setOrigin(0.5, 0.5);
         this.sprit.setCollideWorldBounds(true);
+
+        this.sprit.on('animationcomplete', () => {
+            if(this.sprit.state === PlayerState.Attack){
+                this.sprit.setState(PlayerState.Idle);
+            }
+        });
     }
 
     Object() {
@@ -66,15 +81,34 @@ export class Player implements Character {
     }
 
     Update(cursors: Types.Input.Keyboard.CursorKeys) {
-        const x = this.getX(cursors)
-        const y = this.getY(cursors)
+        const x = this.getX(cursors);
+        const y = this.getY(cursors);
+
+        if (cursors.space.isDown && this.sprit.state != PlayerState.Attack) {
+            this.sprit.setState(PlayerState.Attack);
+        }
 
         this.setAnimation(x, y);
         this.handleFlip(x);
 
-        this.sprit.setVelocityX(x);
-        this.sprit.setVelocityY(y);
+        this.move(x, y);
+    }
 
+    move(x: number, y: number) {
+        if(this.sprit.state === PlayerState.Attack){
+            this.sprit.setVelocityX(0);
+            this.sprit.setVelocityY(0);
+            
+            return
+        }
+
+        let velocity = this.speed;
+        if (x != 0 && y != 0) {
+            velocity = Math.sqrt(Math.pow(velocity, 2) / 2);
+        }
+
+        this.sprit.setVelocityX(x * velocity);
+        this.sprit.setVelocityY(y * velocity);
     }
 
     handleFlip(x: number) {
@@ -89,10 +123,10 @@ export class Player implements Character {
     getX(cursors: Types.Input.Keyboard.CursorKeys): number {
         let x = 0;
         if (cursors.left.isDown) {
-            x = x - this.speed;
+            x = x - 1;
         }
         if (cursors.right.isDown) {
-            x = x + this.speed;
+            x = x + 1;
         }
 
         return x;
@@ -101,22 +135,24 @@ export class Player implements Character {
     getY(cursors: Types.Input.Keyboard.CursorKeys): number {
         let y = 0;
         if (cursors.up.isDown) {
-            y = y - this.speed;
+            y = y - 1;
         }
         if (cursors.down.isDown) {
-            y = y + this.speed;
+            y = y + 1;
         }
 
         return y;
     }
 
     setAnimation(x: number, y: number) {
-        if (x === 0 && y === 0 && this.state != PlayerState.Idle) {
-            this.sprit.anims.play('hero_idle');
-            this.state = PlayerState.Idle;
-        } else if ((x != 0 || y != 0) && this.state != PlayerState.Run) {
-            this.sprit.anims.play('hero_run');
-            this.state = PlayerState.Run
+        if(this.sprit.state === PlayerState.Attack){
+            this.sprit.anims.play('hero_sword_atk', true);
+        }else if (x === 0 && y === 0) {
+            this.sprit.anims.play('hero_idle', true);
+            this.sprit.setState(PlayerState.Idle);
+        } else if ((x != 0 || y != 0)) {
+            this.sprit.anims.play('hero_run', true);
+            this.sprit.setState(PlayerState.Run);
         }
     }
 }
