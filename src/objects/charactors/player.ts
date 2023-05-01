@@ -36,6 +36,7 @@ export class Player implements Character {
         const w = this.scene.game.canvas.width;
         const h = this.scene.game.canvas.height;
         this.sprit = this.scene.physics.add.sprite(w / 2, h / 2, 'hero_idle');
+        this.sprit.setData("type", "player");
 
         this.scene.anims.create({
             key: 'hero_idle',
@@ -67,6 +68,7 @@ export class Player implements Character {
         this.sprit.setScale(3);
         this.sprit.setOrigin(0.5, 0.5);
         this.sprit.setCollideWorldBounds(true);
+        this.sprit.body.setSize(22, 32, true);
 
         this.sprit.on('animationcomplete', () => {
             if(this.sprit.state === PlayerState.Attack){
@@ -153,11 +155,15 @@ export class Player implements Character {
     setAnimation(x: number, y: number) {
         if(this.sprit.state === PlayerState.Attack){
             this.sprit.anims.play('hero_sword_atk', true);
+            this.sprit.body.setSize(30, 40, true);
+            
         }else if (x === 0 && y === 0) {
             this.sprit.anims.play('hero_idle', true);
+            this.sprit.body.setSize(22, 32, true);
             this.sprit.setState(PlayerState.Idle);
         } else if ((x != 0 || y != 0)) {
             this.sprit.anims.play('hero_run', true);
+            this.sprit.body.setSize(22, 32, true);
             this.sprit.setState(PlayerState.Run);
         }
     }

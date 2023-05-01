@@ -5,6 +5,7 @@ export const config: Types.Core.GameConfig = {
     width: '100vw',
     height: '100vh',
     title: 'content',
+    pixelArt: true,
     physics: {
         default: 'arcade',
         arcade: {
