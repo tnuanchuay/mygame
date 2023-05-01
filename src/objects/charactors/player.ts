@@ -91,6 +91,13 @@ export class Player implements Character {
         this.handleFlip(x);
 
         this.move(x, y);
+        this.moveCamera();
+    }
+
+    moveCamera(){
+        const x = this.sprit.x;
+        const y = this.sprit.y;
+        this.scene.cameras.main.centerOn(x, y);
     }
 
     move(x: number, y: number) {

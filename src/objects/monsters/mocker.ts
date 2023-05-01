@@ -28,7 +28,6 @@ export class Mocker implements Monster {
 
     Create() {
         this.sprit = this.scene.physics.add.sprite(0, 0, 'mocker_walk');
-
         this.scene.anims.create({
             key: 'mocker_walk',
             frames: this.scene.anims.generateFrameNumbers('mocker_walk', {
@@ -43,6 +42,7 @@ export class Mocker implements Monster {
         this.sprit.setScale(3);
         this.sprit.setOrigin(0.5, 0.5);
         this.sprit.setCollideWorldBounds(true);
+        this.scene.physics.add.collider(this.sprit, this.player.Object());
     }
 
     Object() {
