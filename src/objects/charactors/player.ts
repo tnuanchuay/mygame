@@ -9,18 +9,19 @@ export interface Character {
 }
 
 export class Player implements Character {
+    private readonly speed: number;
+
     private scene: Scene;
-    private sprit: Physics.Arcade.Sprite;
-    private speed: number;
+    private sprite: Physics.Arcade.Sprite;
 
     constructor(scene: Scene, speed: number) {
         this.scene = scene;
         this.speed = speed;
     }
 
-    Preload() {
-        this.scene.load.spritesheet('hero_idle', 'assets/hero/player_idle48x48.png', {
-            frameWidth: 48, frameHeight: 48,
+    Preload = () => {
+        this.scene.load.spritesheet('hero_idle', 'assets/hero/player_sword_atk_64x64.png', {
+            frameWidth: 38, frameHeight: 64,
         });
 
         this.scene.load.spritesheet('hero_run', 'assets/hero/player_run48x48.png', {
@@ -32,12 +33,7 @@ export class Player implements Character {
         });
     }
 
-    Create() {
-        const w = this.scene.game.canvas.width;
-        const h = this.scene.game.canvas.height;
-        this.sprit = this.scene.physics.add.sprite(w / 2, h / 2, 'hero_idle');
-        this.sprit.setData("type", "player");
-
+    createAnime = () => {
         this.scene.anims.create({
             key: 'hero_idle',
             frames: this.scene.anims.generateFrameNumbers('hero_idle', {
@@ -63,31 +59,42 @@ export class Player implements Character {
                 end: 5,
             }),
         });
+    }
 
-        this.sprit.anims.play('hero_idle');
-        this.sprit.setScale(3);
-        this.sprit.setOrigin(0.5, 0.5);
-        this.sprit.setCollideWorldBounds(true);
-        this.sprit.body.setSize(22, 32, true);
-
-        this.sprit.on('animationcomplete', () => {
-            if(this.sprit.state === PlayerState.Attack){
-                this.sprit.setState(PlayerState.Idle);
+    handleOnAnimationComplete = () => {
+        this.sprite.on('animationcomplete', () => {
+            if (this.sprite.state === PlayerState.Attack) {
+                this.sprite.setState(PlayerState.Idle);
             }
         });
     }
 
-    Object() {
-        return this.sprit;
+    Create = () => {
+        const w = this.scene.game.canvas.width;
+        const h = this.scene.game.canvas.height;
+        this.sprite = this.scene.physics.add.sprite(w / 2, h / 2, 'hero_idle');
+        this.sprite.setData("type", "player");
+
+        this.createAnime();
+
+        this.sprite.anims.play('hero_idle');
+        this.sprite.setScale(3);
+        this.sprite.setOrigin(0.5, 0.5);
+        this.sprite.setCollideWorldBounds(true);
+        this.sprite.body.setSize(22, 32, true);
+
+        this.handleOnAnimationComplete();
     }
 
-    Update(cursors: Types.Input.Keyboard.CursorKeys) {
+    Object = () => {
+        return this.sprite;
+    }
+
+    Update = (cursors: Types.Input.Keyboard.CursorKeys) => {
         const x = this.getX(cursors);
         const y = this.getY(cursors);
 
-        if (cursors.space.isDown && this.sprit.state != PlayerState.Attack) {
-            this.sprit.setState(PlayerState.Attack);
-        }
+        this.handleAttack(cursors);
 
         this.setAnimation(x, y);
         this.handleFlip(x);
@@ -96,16 +103,22 @@ export class Player implements Character {
         this.moveCamera();
     }
 
-    moveCamera(){
-        const x = this.sprit.x;
-        const y = this.sprit.y;
+    handleAttack = (cursors: Types.Input.Keyboard.CursorKeys) => {
+        if (cursors.space.isDown && this.sprite.state != PlayerState.Attack) {
+            this.sprite.setState(PlayerState.Attack);
+        }
+    }
+
+    moveCamera = () => {
+        const x = this.sprite.x;
+        const y = this.sprite.y;
         this.scene.cameras.main.centerOn(x, y);
     }
 
-    move(x: number, y: number) {
-        if(this.sprit.state === PlayerState.Attack){
-            this.sprit.setVelocityX(0);
-            this.sprit.setVelocityY(0);
+    move = (x: number, y: number) => {
+        if (this.sprite.state === PlayerState.Attack) {
+            this.sprite.setVelocityX(0);
+            this.sprite.setVelocityY(0);
 
             return
         }
@@ -115,20 +128,20 @@ export class Player implements Character {
             velocity = Math.sqrt(Math.pow(velocity, 2) / 2);
         }
 
-        this.sprit.setVelocityX(x * velocity);
-        this.sprit.setVelocityY(y * velocity);
+        this.sprite.setVelocityX(x * velocity);
+        this.sprite.setVelocityY(y * velocity);
     }
 
-    handleFlip(x: number) {
+    handleFlip = (x: number) => {
         if (x > 0) {
-            this.sprit.flipX = false;
+            this.sprite.flipX = false;
         }
         if (x < 0) {
-            this.sprit.flipX = true;
+            this.sprite.flipX = true;
         }
     }
 
-    getX(cursors: Types.Input.Keyboard.CursorKeys): number {
+    getX = (cursors: Types.Input.Keyboard.CursorKeys): number => {
         let x = 0;
         if (cursors.left.isDown) {
             x = x - 1;
@@ -140,7 +153,7 @@ export class Player implements Character {
         return x;
     }
 
-    getY(cursors: Types.Input.Keyboard.CursorKeys): number {
+    getY = (cursors: Types.Input.Keyboard.CursorKeys): number => {
         let y = 0;
         if (cursors.up.isDown) {
             y = y - 1;
@@ -152,19 +165,19 @@ export class Player implements Character {
         return y;
     }
 
-    setAnimation(x: number, y: number) {
-        if(this.sprit.state === PlayerState.Attack){
-            this.sprit.anims.play('hero_sword_atk', true);
-            this.sprit.body.setSize(30, 40, true);
-            
-        }else if (x === 0 && y === 0) {
-            this.sprit.anims.play('hero_idle', true);
-            this.sprit.body.setSize(22, 32, true);
-            this.sprit.setState(PlayerState.Idle);
+    setAnimation = (x: number, y: number) => {
+        if (this.sprite.state === PlayerState.Attack) {
+            this.sprite.anims.play('hero_sword_atk', true);
+            this.sprite.body.setSize(30, 40, true);
+
+        } else if (x === 0 && y === 0) {
+            this.sprite.anims.play('hero_idle', true);
+            this.sprite.body.setSize(22, 32, true);
+            this.sprite.setState(PlayerState.Idle);
         } else if ((x != 0 || y != 0)) {
-            this.sprit.anims.play('hero_run', true);
-            this.sprit.body.setSize(22, 32, true);
-            this.sprit.setState(PlayerState.Run);
+            this.sprite.anims.play('hero_run', true);
+            this.sprite.body.setSize(22, 32, true);
+            this.sprite.setState(PlayerState.Run);
         }
     }
 }

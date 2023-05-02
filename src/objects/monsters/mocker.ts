@@ -12,9 +12,10 @@ export interface Monster {
 }
 
 export class Mocker implements Monster {
+    private readonly speed: number;
+
     private scene: Scene;
-    private sprit: Physics.Arcade.Sprite;
-    private speed: number;
+    private sprite: Physics.Arcade.Sprite;
     private player: Character;
     private isDeath: boolean;
     private doneDeath: boolean;
@@ -27,7 +28,7 @@ export class Mocker implements Monster {
 
     IsDeath = (): boolean => this.doneDeath;
 
-    Preload() {
+    Preload = () => {
         this.scene.load.spritesheet('mocker_walk', 'assets/monsters/mocker_walk48x48.png', {
             frameWidth: 48, frameHeight: 48,
         });
@@ -39,15 +40,13 @@ export class Mocker implements Monster {
         this.doneDeath = false;
     }
 
-    getSpawnPosition(): {x: number, y: number} {
+    getSpawnPosition = (): { x: number, y: number } => {
         const w = this.scene.game.canvas.width;
         const h = this.scene.game.canvas.height;
         return { x: getRandomInt(w), y: getRandomInt(h) }
     }
 
-    Create() {
-        const {x, y} = this.getSpawnPosition();
-        this.sprit = this.scene.physics.add.sprite(x, y, 'mocker_walk');
+    createAnime = () => {
         this.scene.anims.create({
             key: 'mocker_walk',
             frames: this.scene.anims.generateFrameNumbers('mocker_walk', {
@@ -65,62 +64,91 @@ export class Mocker implements Monster {
                 end: 9
             }),
             frameRate: 10,
-        })
+        });
+    }
 
-        this.sprit.anims.play('mocker_walk');
-        this.sprit.setScale(3);
-        this.sprit.setOrigin(0.5, 0.5);
-        this.sprit.setCollideWorldBounds(true);
-        this.sprit.body.setSize(22, 34);
-        this.scene.physics.add.collider(this.sprit, this.player.Object(), (obj1, obj2) => {
-            if(obj2.getData("type") === "player" && obj2.state === PlayerState.Attack){
+    createCollision = () => {
+        this.scene.physics.add.collider(this.sprite, this.player.Object(), (obj1, obj2) => {
+            if (obj2.getData("type") === "player" && obj2.state === PlayerState.Attack) {
                 this.isDeath = true;
             }
         });
+    }
 
-        this.sprit.on('animationcomplete', () => {
-            if(this.isDeath){
-                this.sprit.destroy();
+    handleOnAnimationComplete = () => {
+        this.sprite.on('animationcomplete', () => {
+            if (this.isDeath) {
+                this.sprite.destroy();
                 this.doneDeath = true;
             }
         });
     }
 
-    Object() {
-        return this.sprit;
+    Create = () => {
+        const { x, y } = this.getSpawnPosition();
+        this.sprite = this.scene.physics.add.sprite(x, y, 'mocker_walk');
+
+        this.createAnime();
+
+        this.sprite.anims.play('mocker_walk');
+        this.sprite.setScale(3);
+        this.sprite.setOrigin(0.5, 0.5);
+        this.sprite.setCollideWorldBounds(true);
+        this.sprite.body.setSize(22, 34, true);
+        
+        this.createCollision();
+        this.handleOnAnimationComplete();
     }
 
-    Update() {
-        if(this.doneDeath){
+    Object = () => {
+        return this.sprite;
+    }
+
+    Update = () => {
+        if (this.doneDeath) {
             return
         }
 
-        if(this.isDeath){
-            this.sprit.anims.play('mocker_death', true);
-            this.sprit.setVelocityX(0);
-            this.sprit.setVelocityY(0);
+        if (this.isDeath) {
+            this.handleDeath();
             return
         }
 
-        const player = this.player.Object();
-        const playerX = player.x;
-        const playerY = player.y;
+        const { x, y } = this.player.Object();
 
-        const x = this.sprit.x;
-        const y = this.sprit.y;
+        this.handleFlip(x);
+        this.move(x, y);
+    }
+
+    move = (playerX: number, playerY: number) => {
+        const x = this.sprite.x;
+        const y = this.sprite.y;
 
         const xDir = Math.abs(playerX - x) > 1 ? (playerX > x ? 1 : -1) : 0;
         const yDir = Math.abs(playerY - y) > 1 ? (playerY > y ? 1 : -1) : 0;
 
-        if(xDir > 0){
-            this.sprit.flipX = false;
+        this.sprite.setVelocityX(xDir * this.speed);
+        this.sprite.setVelocityY(yDir * this.speed);
+    }
+
+    handleFlip = (playerX: number) => {
+        const x = this.sprite.x;
+
+        const xDir = Math.abs(playerX - x) > 1 ? (playerX > x ? 1 : -1) : 0;
+
+        if (xDir > 0) {
+            this.sprite.flipX = false;
         }
 
-        if(xDir < 0){
-            this.sprit.flipX = true;
+        if (xDir < 0) {
+            this.sprite.flipX = true;
         }
+    }
 
-        this.sprit.setVelocityX(xDir * this.speed);
-        this.sprit.setVelocityY(yDir * this.speed);
+    handleDeath = () => {
+        this.sprite.anims.play('mocker_death', true);
+        this.sprite.setVelocityX(0);
+        this.sprite.setVelocityY(0);
+        this.sprite.body.setSize(22, 34, true);
     }
 }
