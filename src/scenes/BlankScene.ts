@@ -1,56 +1,61 @@
-import { Scene, Types } from "phaser";
-import { Character, Player } from "../objects/charactors/player";
-import { Mocker, Monster } from "../objects/monsters/mocker";
+import {Scene, Types} from "phaser";
+import {IPlayableCharacter, PlayablePlayer} from "../objects/player/playablePlayer";
+import {Mocker, Monster} from "../objects/monsters/mocker";
+import P = Phaser.Input.Keyboard.KeyCodes.P;
+import {PlayerData} from "../objects/player/type";
+import {ICharacter, Player} from "../objects/player/player";
+import {LoadPlayerAnimation, LoadPlayerSpriteSheet} from "../objects/player/playerAssetsUtils";
 
 export class BlankScene extends Scene {
     cursors: Types.Input.Keyboard.CursorKeys;
-    player: Character;
+    player: IPlayableCharacter;
     monster: Monster[];
+    otherPlayers: ICharacter[];
+
+    playersSocket: WebSocket;
 
     constructor() {
         super('Scene1');
-        this.player = new Player(this, 600);
-        this.monster = [];
-        this.monster.push(new Mocker(this, 100, this.player));
-        // this.monster.push(new Mocker(this, 100, this.player));
-        // this.monster.push(new Mocker(this, 100, this.player));
-        // this.monster.push(new Mocker(this, 100, this.player));
-        // this.monster.push(new Mocker(this, 100, this.player));
-        // this.monster.push(new Mocker(this, 100, this.player));
-        // this.monster.push(new Mocker(this, 100, this.player));
-        // this.monster.push(new Mocker(this, 100, this.player));
-        // this.monster.push(new Mocker(this, 100, this.player));
+        this.player = new PlayablePlayer(this, 600);
+        this.otherPlayers = [];
     }
 
-    preload() {
-        this.player.Preload();
-        this.monster.forEach(i => i.Preload());
-        this.monster[0].Preload();
+    preload = async () => {
+        LoadPlayerSpriteSheet(this);
+        await this.loadPlayerAsync();
     }
 
-    create() {
+    create = () => {
+        LoadPlayerAnimation(this);
         this.cursors = this.input.keyboard.createCursorKeys();
         this.player.Create();
-        this.monster.forEach(i => i.Create());
+        for (let i = 0; i < this.otherPlayers.length; i++) {
+            this.otherPlayers[i].Create();
+        }
     }
 
-    update(_: number, __: number): void {
+    loadPlayerAsync() {
+        return new Promise<void>((resolve) => {
+            this.playersSocket = new WebSocket("ws://localhost:3000/ws/players");
+            this.playersSocket.onmessage = (ev) => {
+                console.log(ev);
+                const playerData = JSON.parse(ev.data) as PlayerData[];
+                if (this.otherPlayers.length == 0 && playerData.length != 0) {
+                    this.otherPlayers = playerData
+                        .filter(i => i.playerName != this.player.GetName())
+                        .map(d => new Player(this, d));
+                    this.otherPlayers.forEach(i => i.Create());
+                }
+                resolve();
+            }
+        })
+    }
+
+    update(): void {
         this.player.Update(this.cursors);
-        this.monster.forEach(i => i.Update());
-        this.removeDeathMonster();
-        this.addMoreMonsterIfThereIsNoOne();
-    }
-
-    removeDeathMonster() {
-        this.monster = this.monster.filter(m => !m.IsDeath());
-    }
-
-    addMoreMonsterIfThereIsNoOne(){
-        if(this.monster.length === 0){
-            var m = new Mocker(this, 100, this.player);
-            m.Preload();
-            m.Create();
-            this.monster.push(m);
+        for (let i = 0; i < this.otherPlayers.length; i++
+        ) {
+            this.otherPlayers[i].Update();
         }
     }
 }

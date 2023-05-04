@@ -1,67 +1,40 @@
 import { Physics, Scene, Types } from "phaser";
 import { PlayerState } from "./playerState";
+import {LoadPlayerAnimation, LoadPlayerSpriteSheet} from "./playerAssetsUtils";
+import {createSessionMessage} from "../../net/messages";
 
-export interface Character {
+export interface IPlayableCharacter {
+    GetName: () => string;
     Preload: () => void;
     Create: () => void;
     Object: () => Physics.Arcade.Sprite;
     Update: (cursors: Types.Input.Keyboard.CursorKeys) => void;
 }
 
-export class Player implements Character {
+export class PlayablePlayer implements IPlayableCharacter{
     private readonly speed: number;
+    private readonly playerName: string;
 
     private scene: Scene;
     private sprite: Physics.Arcade.Sprite;
 
+    private sessionSocket: WebSocket;
+
     constructor(scene: Scene, speed: number) {
         this.scene = scene;
         this.speed = speed;
+        this.playerName = new URL(document.location.href).searchParams.get("name");
+    }
+
+    GetName = (): string => {
+        return this.playerName;
     }
 
     Preload = () => {
-        this.scene.load.spritesheet('hero_idle', 'assets/hero/player_sword_atk_64x64.png', {
-            frameWidth: 38, frameHeight: 64,
-        });
-
-        this.scene.load.spritesheet('hero_run', 'assets/hero/player_run48x48.png', {
-            frameWidth: 48, frameHeight: 48,
-        });
-
-        this.scene.load.spritesheet('hero_sword_atk', 'assets/hero/player_swordatk64x64.png', {
-            frameWidth: 64, frameHeight: 64,
-        });
+        LoadPlayerSpriteSheet(this.scene);
     }
 
-    createAnime = () => {
-        this.scene.anims.create({
-            key: 'hero_idle',
-            frames: this.scene.anims.generateFrameNumbers('hero_idle', {
-                start: 0,
-                end: 9,
-            }),
-            repeat: -1,
-        });
-
-        this.scene.anims.create({
-            key: 'hero_run',
-            frames: this.scene.anims.generateFrameNumbers('hero_run', {
-                start: 0,
-                end: 7,
-            }),
-            repeat: -1,
-        });
-
-        this.scene.anims.create({
-            key: 'hero_sword_atk',
-            frames: this.scene.anims.generateFrameNames('hero_sword_atk', {
-                start: 0,
-                end: 5,
-            }),
-        });
-    }
-
-    handleOnAnimationComplete = () => {
+    HandleOnAnimationComplete = () => {
         this.sprite.on('animationcomplete', () => {
             if (this.sprite.state === PlayerState.Attack) {
                 this.sprite.setState(PlayerState.Idle);
@@ -75,7 +48,7 @@ export class Player implements Character {
         this.sprite = this.scene.physics.add.sprite(w / 2, h / 2, 'hero_idle');
         this.sprite.setData("type", "player");
 
-        this.createAnime();
+        LoadPlayerAnimation(this.scene);
 
         this.sprite.anims.play('hero_idle');
         this.sprite.setScale(3);
@@ -83,7 +56,17 @@ export class Player implements Character {
         this.sprite.setCollideWorldBounds(true);
         this.sprite.body.setSize(22, 32, true);
 
-        this.handleOnAnimationComplete();
+        this.HandleOnAnimationComplete();
+
+        this.joinGame();
+    }
+
+    joinGame = () => {
+        this.sessionSocket = new WebSocket("ws://localhost:3000/ws/session")
+        this.sessionSocket.onopen = () => {
+            this.sessionSocket.send(
+                createSessionMessage(this.playerName, this.sprite.x, this.sprite.y));
+        }
     }
 
     Object = () => {
@@ -101,7 +84,18 @@ export class Player implements Character {
 
         this.move(x, y);
         this.moveCamera();
+        // this.updateToServer();
     }
+
+    // updateToServer = () => {
+        // const x = this.sprite.x;
+        // const y = this.sprite.y;
+        // if(this.lastX != x || this.lastY != y){
+        //     this.websocket.Move(x, y);
+        //     this.lastX = x;
+        //     this.lastY = y;
+        // }
+    // }
 
     handleAttack = (cursors: Types.Input.Keyboard.CursorKeys) => {
         if (cursors.space.isDown && this.sprite.state != PlayerState.Attack) {

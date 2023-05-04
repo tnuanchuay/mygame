@@ -1,7 +1,7 @@
 import { Physics, Scene, Types } from "phaser";
-import { Character } from './../charactors/player';
+import { IPlayableCharacter } from '../player/playablePlayer';
 import { getRandomInt } from './../../utils/random';
-import { PlayerState } from "../charactors/playerState";
+import { PlayerState } from "../player/playerState";
 
 export interface Monster {
     Preload: () => void;
@@ -16,11 +16,11 @@ export class Mocker implements Monster {
 
     private scene: Scene;
     private sprite: Physics.Arcade.Sprite;
-    private player: Character;
+    private player: IPlayableCharacter;
     private isDeath: boolean;
     private doneDeath: boolean;
 
-    constructor(scene: Scene, speed: number, player: Character) {
+    constructor(scene: Scene, speed: number, player: IPlayableCharacter) {
         this.scene = scene;
         this.speed = speed;
         this.player = player;
