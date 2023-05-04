@@ -3,29 +3,39 @@ import {LoadPlayerAnimation, LoadPlayerSpriteSheet} from "./playerAssetsUtils";
 import {PlayerData} from "./type";
 
 export interface ICharacter {
+    GetName: () => string;
     Create: () => void;
     Object: () => Physics.Arcade.Sprite;
     Update: () => void;
-    // SetPosition: (x: number)
+    SetPosition: (x: number, y: number) => void;
+    Destroy: () => void;
 }
 
 export class Player implements ICharacter {
     private readonly playerName: string;
-    private readonly x: number;
-    private readonly y: number;
+    private readonly startX: number;
+    private readonly startY: number;
+    private nextX: number;
+    private nextY: number;
 
     private scene: Scene;
     private sprite: Physics.Arcade.Sprite;
+    private playerSocket: WebSocket;
 
     constructor(scene: Scene, playerData: PlayerData) {
         this.scene = scene;
         this.playerName = playerData.playerName;
-        this.x = playerData.x;
-        this.y = playerData.y;
+        this.startX = playerData.x;
+        this.startY = playerData.y;
+    }
+
+    public Destroy = () => {
+        this.sprite.removeFromDisplayList()
+        this.sprite.destroy(true);
     }
 
     public Create(): void {
-        this.sprite = this.scene.physics.add.sprite(this.x, this.y, 'hero_idle');
+        this.sprite = this.scene.physics.add.sprite(this.startX, this.startY, 'hero_idle');
         this.sprite.setData("type", "other_player");
 
         this.sprite.anims.play('hero_idle');
@@ -33,14 +43,39 @@ export class Player implements ICharacter {
         this.sprite.setOrigin(0.5, 0.5);
         this.sprite.setCollideWorldBounds(true);
         this.sprite.body.setSize(22, 32, true);
+        this.playerSocket = new WebSocket(`ws://localhost:3000/ws/player/${this.playerName}`);
+        this.playerSocket.onopen = () => {
+            this.playerSocket.onmessage = (ev) => {
+                const playerData = JSON.parse(ev.data) as PlayerData;
+                this.onPlayerUpdate(playerData)
+            }
+        }
+    }
+
+    onPlayerUpdate = (playerData: PlayerData) => {
+        const x = this.sprite.x;
+        const y = this.sprite.y;
+        if(playerData.x != x || playerData.y != y){
+            console.log(playerData.x, playerData.y);
+            this.SetPosition(playerData.x, playerData.y);
+        }
+    }
+
+    GetName = (): string => {
+        return this.playerName;
     }
 
     public Object(): Phaser.Physics.Arcade.Sprite {
         return this.sprite;
     }
 
-
     Update(): void {
+        this.sprite.setX(this.nextX);
+        this.sprite.setY(this.nextY);
+    }
 
+    SetPosition(x: number, y: number) {
+        this.nextX = x;
+        this.nextY = y;
     }
 }

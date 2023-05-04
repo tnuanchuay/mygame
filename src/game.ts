@@ -2,8 +2,8 @@ import { Types, Game } from 'phaser';
 import { BlankScene } from './scenes/BlankScene'
 
 export const config: Types.Core.GameConfig = {
-    width: '100vw',
-    height: '100vh',
+    width: 600,
+    height: 500,
     title: 'content',
     pixelArt: true,
     physics: {
@@ -15,8 +15,8 @@ export const config: Types.Core.GameConfig = {
     scene: [new BlankScene()]
 };
 
-export class VampireSurvior extends Game {
+export class MyGame extends Game {
     constructor() {
         super(config);
     }
-};
+}

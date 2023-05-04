@@ -5,6 +5,7 @@ import P = Phaser.Input.Keyboard.KeyCodes.P;
 import {PlayerData} from "../objects/player/type";
 import {ICharacter, Player} from "../objects/player/player";
 import {LoadPlayerAnimation, LoadPlayerSpriteSheet} from "../objects/player/playerAssetsUtils";
+import {playerExists} from "../utils/players";
 
 export class BlankScene extends Scene {
     cursors: Types.Input.Keyboard.CursorKeys;
@@ -38,17 +39,35 @@ export class BlankScene extends Scene {
         return new Promise<void>((resolve) => {
             this.playersSocket = new WebSocket("ws://localhost:3000/ws/players");
             this.playersSocket.onmessage = (ev) => {
-                console.log(ev);
                 const playerData = JSON.parse(ev.data) as PlayerData[];
-                if (this.otherPlayers.length == 0 && playerData.length != 0) {
-                    this.otherPlayers = playerData
-                        .filter(i => i.playerName != this.player.GetName())
-                        .map(d => new Player(this, d));
-                    this.otherPlayers.forEach(i => i.Create());
-                }
+                this.addNewOtherPlayers(playerData);
+                this.removeLeftPlayer(playerData);
                 resolve();
             }
         })
+    }
+
+    addNewOtherPlayers = (playersData: PlayerData[]) => {
+        for (let i = 0; i < playersData.length; i++) {
+            if (playersData[i].playerName === this.player.GetName()) {
+                continue
+            }
+
+            if (!playerExists(this.otherPlayers, playersData[i])) {
+                const player = new Player(this, playersData[i]);
+                player.Create();
+                this.otherPlayers.push(player);
+            }
+        }
+    }
+
+    removeLeftPlayer = (playerData: PlayerData[]) => {
+        const nameList = playerData.map(i => i.playerName);
+        const removeList = this.otherPlayers.filter(i => nameList.indexOf(i.GetName()) < 0);
+        this.otherPlayers = this.otherPlayers.filter(i => nameList.indexOf(i.GetName()) >= 0);
+        removeList.forEach(i => {
+            i.Destroy();
+        });
     }
 
     update(): void {

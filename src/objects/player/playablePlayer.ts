@@ -1,7 +1,7 @@
 import { Physics, Scene, Types } from "phaser";
 import { PlayerState } from "./playerState";
 import {LoadPlayerAnimation, LoadPlayerSpriteSheet} from "./playerAssetsUtils";
-import {createSessionMessage} from "../../net/messages";
+import {createMovementMessage, createSessionMessage} from "../../net/messages";
 
 export interface IPlayableCharacter {
     GetName: () => string;
@@ -14,11 +14,14 @@ export interface IPlayableCharacter {
 export class PlayablePlayer implements IPlayableCharacter{
     private readonly speed: number;
     private readonly playerName: string;
+    private lastX: number;
+    private lastY: number;
 
     private scene: Scene;
     private sprite: Physics.Arcade.Sprite;
 
     private sessionSocket: WebSocket;
+    private movementSocket: WebSocket;
 
     constructor(scene: Scene, speed: number) {
         this.scene = scene;
@@ -67,6 +70,8 @@ export class PlayablePlayer implements IPlayableCharacter{
             this.sessionSocket.send(
                 createSessionMessage(this.playerName, this.sprite.x, this.sprite.y));
         }
+
+        this.movementSocket = new WebSocket("ws://localhost:3000/ws/move");
     }
 
     Object = () => {
@@ -84,18 +89,22 @@ export class PlayablePlayer implements IPlayableCharacter{
 
         this.move(x, y);
         this.moveCamera();
-        // this.updateToServer();
+        this.updateToServer();
     }
 
-    // updateToServer = () => {
-        // const x = this.sprite.x;
-        // const y = this.sprite.y;
-        // if(this.lastX != x || this.lastY != y){
-        //     this.websocket.Move(x, y);
-        //     this.lastX = x;
-        //     this.lastY = y;
-        // }
-    // }
+    updateToServer = () => {
+        if(this.movementSocket.readyState != this.movementSocket.OPEN){
+            return
+        }
+
+        const x = this.sprite.x;
+        const y = this.sprite.y;
+        if(this.lastX != x || this.lastY != y){
+            this.movementSocket.send(createMovementMessage(this.playerName, x, y));
+            this.lastX = x;
+            this.lastY = y;
+        }
+    }
 
     handleAttack = (cursors: Types.Input.Keyboard.CursorKeys) => {
         if (cursors.space.isDown && this.sprite.state != PlayerState.Attack) {
@@ -163,7 +172,6 @@ export class PlayablePlayer implements IPlayableCharacter{
         if (this.sprite.state === PlayerState.Attack) {
             this.sprite.anims.play('hero_sword_atk', true);
             this.sprite.body.setSize(30, 40, true);
-
         } else if (x === 0 && y === 0) {
             this.sprite.anims.play('hero_idle', true);
             this.sprite.body.setSize(22, 32, true);
