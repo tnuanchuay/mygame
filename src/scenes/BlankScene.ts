@@ -15,14 +15,14 @@ export class BlankScene extends Scene {
     playersSocket: WebSocket;
 
     constructor() {
-        super('Scene1');
+        super('BlankScene');
         this.player = new PlayablePlayer(this, 600);
         this.otherPlayers = [];
     }
 
     preload = async () => {
         LoadPlayerSpriteSheet(this);
-        await this.loadPlayerAsync();
+        await this.loadPlayersAsync();
     }
 
     create = () => {
@@ -34,13 +34,13 @@ export class BlankScene extends Scene {
         }
     }
 
-    loadPlayerAsync() {
+    loadPlayersAsync() {
         return new Promise<void>((resolve) => {
             this.playersSocket = new WebSocket("ws://localhost:3000/ws/players");
             this.playersSocket.onmessage = (ev) => {
                 const playerData = JSON.parse(ev.data) as PlayerData[];
                 this.addNewOtherPlayers(playerData);
-                this.removeLeftPlayer(playerData);
+                this.removeDisconnectedPlayer(playerData);
                 resolve();
             }
         })
@@ -60,7 +60,7 @@ export class BlankScene extends Scene {
         }
     }
 
-    removeLeftPlayer = (playerData: PlayerData[]) => {
+    removeDisconnectedPlayer = (playerData: PlayerData[]) => {
         const nameList = playerData.map(i => i.playerName);
         const removeList = this.otherPlayers.filter(i => nameList.indexOf(i.GetName()) < 0);
         this.otherPlayers = this.otherPlayers.filter(i => nameList.indexOf(i.GetName()) >= 0);

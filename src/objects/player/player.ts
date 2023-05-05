@@ -1,6 +1,7 @@
 import {Physics, Scene, Types} from "phaser";
 import {LoadPlayerAnimation, LoadPlayerSpriteSheet} from "./playerAssetsUtils";
 import {PlayerData} from "./type";
+import {getHeroModelSet, HeroModel} from "../../assets/hero";
 
 export interface ICharacter {
     GetName: () => string;
@@ -13,6 +14,8 @@ export interface ICharacter {
 
 export class Player implements ICharacter {
     private readonly playerName: string;
+    private readonly modeId: string;
+
     private readonly startX: number;
     private readonly startY: number;
     private nextX: number;
@@ -27,6 +30,7 @@ export class Player implements ICharacter {
         this.playerName = playerData.playerName;
         this.startX = playerData.x;
         this.startY = playerData.y;
+        this.modeId = playerData.modelId;
         this.nextX = this.startX;
         this.nextY = this.startY;
     }
@@ -37,10 +41,10 @@ export class Player implements ICharacter {
     }
 
     public Create(): void {
-        this.sprite = this.scene.physics.add.sprite(this.startX, this.startY, 'hero_idle');
+        this.sprite = this.scene.physics.add.sprite(this.startX, this.startY, getHeroModelSet(this.modeId).StartSprite);
         this.sprite.setData("type", "other_player");
 
-        this.sprite.anims.play('hero_m_idle');
+        this.sprite.anims.play(getHeroModelSet(this.modeId).Idle, true);
         this.sprite.setOrigin(0.5, 0.5);
         this.sprite.setCollideWorldBounds(true);
         this.sprite.body.setSize(22, 32, true);
@@ -74,24 +78,25 @@ export class Player implements ICharacter {
         const y = this.sprite.y;
 
         if((x == this.nextX) && (y == this.nextY)){
-            this.sprite.anims.play('hero_m_idle', true);
+            this.sprite.anims.play(getHeroModelSet(this.modeId).Idle, true);
             this.sprite.setVelocityX(0);
             this.sprite.setVelocityY(0);
             return
         }
-
-        this.handleFlip(x, this.nextX);
         this.move();
     }
 
     move = () => {
-        this.sprite.anims.play('hero_m_idle', true);
+        this.sprite.anims.play(getHeroModelSet(this.modeId).Idle, true);
 
         const x = this.sprite.x;
         const y = this.sprite.y;
-        console.log("friend move", this.nextX, this.nextY);
-        this.sprite.setVelocityX(this.nextX - x);
-        this.sprite.setVelocityY(this.nextY - y);
+
+        console.log("friend move", x, y, "to", this.nextX, this.nextY);
+
+        this.handleFlip(x, this.nextX);
+        this.sprite.setX(this.nextX);
+        this.sprite.setY(this.nextY);
     }
 
     handleFlip = (x: number, nextX: number) => {

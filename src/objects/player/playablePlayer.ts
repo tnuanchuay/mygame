@@ -3,10 +3,10 @@ import {PlayerState} from "./playerState";
 import {LoadPlayerAnimation, LoadPlayerSpriteSheet} from "./playerAssetsUtils";
 import {createMovementMessage, createSessionMessage} from "../../net/messages";
 import {GetObliqueVelocity} from "../../utils/math";
+import {getHeroModelSet} from "../../assets/hero";
 
 export interface IPlayableCharacter {
     GetName: () => string;
-    Preload: () => void;
     Create: () => void;
     Object: () => Physics.Arcade.Sprite;
     Update: (cursors: Types.Input.Keyboard.CursorKeys) => void;
@@ -15,10 +15,12 @@ export interface IPlayableCharacter {
 export class PlayablePlayer implements IPlayableCharacter {
     private readonly speed: number;
     private readonly playerName: string;
+    private readonly modelId: string;
+
     private lastX: number;
     private lastY: number;
 
-    private scene: Scene;
+    private readonly scene: Scene;
     private sprite: Physics.Arcade.Sprite;
 
     private sessionSocket: WebSocket;
@@ -28,17 +30,14 @@ export class PlayablePlayer implements IPlayableCharacter {
         this.scene = scene;
         this.speed = speed;
         this.playerName = new URL(document.location.href).searchParams.get("name");
+        this.modelId = new URL(document.location.href).searchParams.get("modelId");
     }
 
     GetName = (): string => {
         return this.playerName;
     }
 
-    Preload = () => {
-        LoadPlayerSpriteSheet(this.scene);
-    }
-
-    HandleOnAnimationComplete = () => {
+    private handleOnAnimationComplete = () => {
         this.sprite.on('animationcomplete', () => {
             if (this.sprite.state === PlayerState.Attack) {
                 this.sprite.setState(PlayerState.Idle);
@@ -49,26 +48,26 @@ export class PlayablePlayer implements IPlayableCharacter {
     Create = () => {
         const w = this.scene.game.canvas.width;
         const h = this.scene.game.canvas.height;
-        this.sprite = this.scene.physics.add.sprite(w / 2, h / 2, 'hero_idle');
+        this.sprite = this.scene.physics.add.sprite(w / 2, h / 2, getHeroModelSet(this.modelId).StartSprite);
         this.sprite.setData("type", "player");
 
         LoadPlayerAnimation(this.scene);
 
-        this.sprite.anims.play('hero_fm_idle');
+        this.sprite.anims.play(getHeroModelSet(this.modelId).Idle);
         this.sprite.setOrigin(0.5, 0.5);
         this.sprite.setCollideWorldBounds(true);
         this.sprite.body.setSize(22, 32, true);
 
-        this.HandleOnAnimationComplete();
+        this.handleOnAnimationComplete();
 
         this.joinGame();
     }
 
-    joinGame = () => {
+    private joinGame = () => {
         this.sessionSocket = new WebSocket("ws://localhost:3000/ws/session")
         this.sessionSocket.onopen = () => {
             this.sessionSocket.send(
-                createSessionMessage(this.playerName, this.sprite.x, this.sprite.y));
+                createSessionMessage(this.playerName, this.sprite.x, this.sprite.y, this.modelId));
         }
 
         this.movementSocket = new WebSocket("ws://localhost:3000/ws/move");
@@ -90,7 +89,7 @@ export class PlayablePlayer implements IPlayableCharacter {
         this.updateToServer();
     }
 
-    updateToServer = () => {
+    private updateToServer = () => {
         if (this.movementSocket.readyState != this.movementSocket.OPEN) {
             return
         }
@@ -104,7 +103,7 @@ export class PlayablePlayer implements IPlayableCharacter {
         }
     }
 
-    move = (x: number, y: number) => {
+    private move = (x: number, y: number) => {
         if (this.sprite.state === PlayerState.Attack) {
             this.sprite.setVelocityX(0);
             this.sprite.setVelocityY(0);
@@ -121,7 +120,7 @@ export class PlayablePlayer implements IPlayableCharacter {
         this.sprite.setVelocityY(y * velocity);
     }
 
-    handleFlip = (x: number) => {
+    private handleFlip = (x: number) => {
         if (x > 0) {
             this.sprite.flipX = false;
         }
@@ -130,7 +129,7 @@ export class PlayablePlayer implements IPlayableCharacter {
         }
     }
 
-    getX = (cursors: Types.Input.Keyboard.CursorKeys): number => {
+    private getX = (cursors: Types.Input.Keyboard.CursorKeys): number => {
         let x = 0;
         if (cursors.left.isDown) {
             x = x - 1;
@@ -142,7 +141,7 @@ export class PlayablePlayer implements IPlayableCharacter {
         return x;
     }
 
-    getY = (cursors: Types.Input.Keyboard.CursorKeys): number => {
+    private getY = (cursors: Types.Input.Keyboard.CursorKeys): number => {
         let y = 0;
         if (cursors.up.isDown) {
             y = y - 1;
@@ -154,7 +153,7 @@ export class PlayablePlayer implements IPlayableCharacter {
         return y;
     }
 
-    setAnimation = (x: number, y: number) => {
-        this.sprite.anims.play('hero_fm_idle', true);
+    private setAnimation = (x: number, y: number) => {
+        this.sprite.anims.play(getHeroModelSet(this.modelId).Idle, true);
     }
 }
