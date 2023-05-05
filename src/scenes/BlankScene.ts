@@ -1,7 +1,6 @@
 import {Scene, Types} from "phaser";
 import {IPlayableCharacter, PlayablePlayer} from "../objects/player/playablePlayer";
 import {Mocker, Monster} from "../objects/monsters/mocker";
-import P = Phaser.Input.Keyboard.KeyCodes.P;
 import {PlayerData} from "../objects/player/type";
 import {ICharacter, Player} from "../objects/player/player";
 import {LoadPlayerAnimation, LoadPlayerSpriteSheet} from "../objects/player/playerAssetsUtils";

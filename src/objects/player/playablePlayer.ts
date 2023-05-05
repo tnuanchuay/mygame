@@ -1,5 +1,5 @@
-import { Physics, Scene, Types } from "phaser";
-import { PlayerState } from "./playerState";
+import {Physics, Scene, Types} from "phaser";
+import {PlayerState} from "./playerState";
 import {LoadPlayerAnimation, LoadPlayerSpriteSheet} from "./playerAssetsUtils";
 import {createMovementMessage, createSessionMessage} from "../../net/messages";
 import {GetObliqueVelocity} from "../../utils/math";
@@ -12,7 +12,7 @@ export interface IPlayableCharacter {
     Update: (cursors: Types.Input.Keyboard.CursorKeys) => void;
 }
 
-export class PlayablePlayer implements IPlayableCharacter{
+export class PlayablePlayer implements IPlayableCharacter {
     private readonly speed: number;
     private readonly playerName: string;
     private lastX: number;
@@ -54,8 +54,7 @@ export class PlayablePlayer implements IPlayableCharacter{
 
         LoadPlayerAnimation(this.scene);
 
-        this.sprite.anims.play('hero_idle');
-        this.sprite.setScale(3);
+        this.sprite.anims.play('hero_fm_idle');
         this.sprite.setOrigin(0.5, 0.5);
         this.sprite.setCollideWorldBounds(true);
         this.sprite.body.setSize(22, 32, true);
@@ -94,13 +93,13 @@ export class PlayablePlayer implements IPlayableCharacter{
     }
 
     updateToServer = () => {
-        if(this.movementSocket.readyState != this.movementSocket.OPEN){
+        if (this.movementSocket.readyState != this.movementSocket.OPEN) {
             return
         }
 
         const x = this.sprite.x;
         const y = this.sprite.y;
-        if(this.lastX != x || this.lastY != y){
+        if (this.lastX != x || this.lastY != y) {
             this.movementSocket.send(createMovementMessage(this.playerName, x, y));
             this.lastX = x;
             this.lastY = y;
@@ -170,17 +169,6 @@ export class PlayablePlayer implements IPlayableCharacter{
     }
 
     setAnimation = (x: number, y: number) => {
-        if (this.sprite.state === PlayerState.Attack) {
-            this.sprite.anims.play('hero_sword_atk', true);
-            this.sprite.body.setSize(30, 40, true);
-        } else if (x === 0 && y === 0) {
-            this.sprite.anims.play('hero_idle', true);
-            this.sprite.body.setSize(22, 32, true);
-            this.sprite.setState(PlayerState.Idle);
-        } else if ((x != 0 || y != 0)) {
-            this.sprite.anims.play('hero_run', true);
-            this.sprite.body.setSize(22, 32, true);
-            this.sprite.setState(PlayerState.Run);
-        }
+        this.sprite.anims.play('hero_fm_idle', true);
     }
 }

@@ -38,8 +38,7 @@ export class Player implements ICharacter {
         this.sprite = this.scene.physics.add.sprite(this.startX, this.startY, 'hero_idle');
         this.sprite.setData("type", "other_player");
 
-        this.sprite.anims.play('hero_idle');
-        this.sprite.setScale(3);
+        this.sprite.anims.play('hero_m_idle');
         this.sprite.setOrigin(0.5, 0.5);
         this.sprite.setCollideWorldBounds(true);
         this.sprite.body.setSize(22, 32, true);
@@ -73,11 +72,11 @@ export class Player implements ICharacter {
         const y = this.sprite.y;
 
         if((x == this.nextX) && (y == this.nextY)){
-            this.sprite.anims.play('hero_idle', true)
+            this.sprite.anims.play('hero_m_idle', true)
             return
         }
 
-        this.sprite.anims.play('hero_run', true)
+        this.sprite.anims.play('hero_m_run', true)
         this.handleFlip(x, this.nextX);
         this.sprite.setX(this.nextX);
         this.sprite.setY(this.nextY);
