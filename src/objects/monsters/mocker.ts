@@ -1,6 +1,6 @@
 import { Physics, Scene, Types } from "phaser";
 import { IPlayableCharacter } from '../player/playablePlayer';
-import { getRandomInt } from './../../utils/random';
+import { getRandomInt } from './../../utils/math';
 import { PlayerState } from "../player/playerState";
 
 export interface Monster {

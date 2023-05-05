@@ -56,7 +56,6 @@ export class Player implements ICharacter {
         const x = this.sprite.x;
         const y = this.sprite.y;
         if(playerData.x != x || playerData.y != y){
-            console.log(playerData.x, playerData.y);
             this.SetPosition(playerData.x, playerData.y);
         }
     }
@@ -70,8 +69,27 @@ export class Player implements ICharacter {
     }
 
     Update(): void {
+        const x = this.sprite.x;
+        const y = this.sprite.y;
+
+        if((x == this.nextX) && (y == this.nextY)){
+            this.sprite.anims.play('hero_idle', true)
+            return
+        }
+
+        this.sprite.anims.play('hero_run', true)
+        this.handleFlip(x, this.nextX);
         this.sprite.setX(this.nextX);
         this.sprite.setY(this.nextY);
+    }
+
+    handleFlip = (x: number, nextX: number) => {
+        if (x > nextX) {
+            this.sprite.flipX = true;
+        }
+        if (x < nextX) {
+            this.sprite.flipX = false;
+        }
     }
 
     SetPosition(x: number, y: number) {

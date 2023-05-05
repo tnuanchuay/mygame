@@ -2,6 +2,7 @@ import { Physics, Scene, Types } from "phaser";
 import { PlayerState } from "./playerState";
 import {LoadPlayerAnimation, LoadPlayerSpriteSheet} from "./playerAssetsUtils";
 import {createMovementMessage, createSessionMessage} from "../../net/messages";
+import {GetObliqueVelocity} from "../../utils/math";
 
 export interface IPlayableCharacter {
     GetName: () => string;
@@ -88,7 +89,7 @@ export class PlayablePlayer implements IPlayableCharacter{
         this.handleFlip(x);
 
         this.move(x, y);
-        this.moveCamera();
+        // this.moveCamera();
         this.updateToServer();
     }
 
@@ -115,7 +116,7 @@ export class PlayablePlayer implements IPlayableCharacter{
     moveCamera = () => {
         const x = this.sprite.x;
         const y = this.sprite.y;
-        this.scene.cameras.main.centerOn(x, y);
+        this.scene.cameras.main.pan(x, y, 10);
     }
 
     move = (x: number, y: number) => {
@@ -128,7 +129,7 @@ export class PlayablePlayer implements IPlayableCharacter{
 
         let velocity = this.speed;
         if (x != 0 && y != 0) {
-            velocity = Math.sqrt(Math.pow(velocity, 2) / 2);
+            velocity = GetObliqueVelocity(velocity);
         }
 
         this.sprite.setVelocityX(x * velocity);
