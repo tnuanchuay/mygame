@@ -27,6 +27,8 @@ export class Player implements ICharacter {
         this.playerName = playerData.playerName;
         this.startX = playerData.x;
         this.startY = playerData.y;
+        this.nextX = this.startX;
+        this.nextY = this.startY;
     }
 
     public Destroy = () => {
@@ -72,14 +74,24 @@ export class Player implements ICharacter {
         const y = this.sprite.y;
 
         if((x == this.nextX) && (y == this.nextY)){
-            this.sprite.anims.play('hero_m_idle', true)
+            this.sprite.anims.play('hero_m_idle', true);
+            this.sprite.setVelocityX(0);
+            this.sprite.setVelocityY(0);
             return
         }
 
-        this.sprite.anims.play('hero_m_run', true)
         this.handleFlip(x, this.nextX);
-        this.sprite.setX(this.nextX);
-        this.sprite.setY(this.nextY);
+        this.move();
+    }
+
+    move = () => {
+        this.sprite.anims.play('hero_m_idle', true);
+
+        const x = this.sprite.x;
+        const y = this.sprite.y;
+        console.log("friend move", this.nextX, this.nextY);
+        this.sprite.setVelocityX(this.nextX - x);
+        this.sprite.setVelocityY(this.nextY - y);
     }
 
     handleFlip = (x: number, nextX: number) => {

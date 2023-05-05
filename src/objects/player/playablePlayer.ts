@@ -82,8 +82,6 @@ export class PlayablePlayer implements IPlayableCharacter {
         const x = this.getX(cursors);
         const y = this.getY(cursors);
 
-        this.handleAttack(cursors);
-
         this.setAnimation(x, y);
         this.handleFlip(x);
 
@@ -104,18 +102,6 @@ export class PlayablePlayer implements IPlayableCharacter {
             this.lastX = x;
             this.lastY = y;
         }
-    }
-
-    handleAttack = (cursors: Types.Input.Keyboard.CursorKeys) => {
-        if (cursors.space.isDown && this.sprite.state != PlayerState.Attack) {
-            this.sprite.setState(PlayerState.Attack);
-        }
-    }
-
-    moveCamera = () => {
-        const x = this.sprite.x;
-        const y = this.sprite.y;
-        this.scene.cameras.main.pan(x, y, 10);
     }
 
     move = (x: number, y: number) => {
