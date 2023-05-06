@@ -9,13 +9,13 @@ export interface IPlayer {
 }
 
 export abstract class BasePlayer implements IPlayer {
-    private readonly playerName: string;
-    private readonly modeId: string;
-    private readonly startX: number;
-    private readonly startY: number;
-    private readonly scene: Scene;
+    readonly playerName: string;
+    readonly modeId: string;
+    readonly startX: number;
+    readonly startY: number;
+    readonly scene: Scene;
 
-    private sprite: Physics.Arcade.Sprite;
+    sprite: Physics.Arcade.Sprite;
 
     constructor(scene: Scene, playerName: string, startX: number, startY: number, modelId: string) {
         this.scene = scene;

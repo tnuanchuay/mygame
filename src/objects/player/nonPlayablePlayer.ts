@@ -1,42 +1,25 @@
-import {Physics, Scene, Types} from "phaser";
-import {LoadPlayerAnimation, LoadPlayerSpriteSheet} from "./playerAssetsUtils";
+import {Scene} from "phaser";
 import {PlayerData} from "./type";
-import {getHeroModelSet, HeroModel} from "../../assets/hero";
+import {getHeroModelSet} from "../../assets/hero";
+import {BasePlayer, IPlayer} from "./basePlayer";
 
-export interface ICharacter {
-    GetName: () => string;
-    Create: () => void;
-    Object: () => Physics.Arcade.Sprite;
-    Update: () => void;
-    SetPosition: (x: number, y: number) => void;
-    Destroy: () => void;
+export interface INonPlayableCharacter extends IPlayer{
 }
 
-export class Player implements ICharacter {
-    private readonly playerName: string;
-    private readonly modeId: string;
-
-    private readonly startX: number;
-    private readonly startY: number;
+export class NonPlayablePlayer extends BasePlayer implements INonPlayableCharacter{
     private nextX: number;
     private nextY: number;
 
-    private scene: Scene;
-    private sprite: Physics.Arcade.Sprite;
     private playerSocket: WebSocket;
 
     constructor(scene: Scene, playerData: PlayerData) {
-        this.scene = scene;
-        this.playerName = playerData.playerName;
-        this.startX = playerData.x;
-        this.startY = playerData.y;
-        this.modeId = playerData.modelId;
-        this.nextX = this.startX;
-        this.nextY = this.startY;
+        super(scene, playerData.playerName, playerData.x, playerData.y, playerData.modelId);
+        this.nextX = playerData.x;
+        this.nextY = playerData.y;
     }
 
     public Destroy = () => {
-        this.sprite.removeFromDisplayList()
+        this.sprite.removeFromDisplayList();
         this.sprite.destroy(true);
     }
 
@@ -67,10 +50,6 @@ export class Player implements ICharacter {
 
     GetName = (): string => {
         return this.playerName;
-    }
-
-    public Object(): Phaser.Physics.Arcade.Sprite {
-        return this.sprite;
     }
 
     Update(): void {

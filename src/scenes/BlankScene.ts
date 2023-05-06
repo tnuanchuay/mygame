@@ -2,15 +2,14 @@ import {Scene, Types} from "phaser";
 import {IPlayableCharacter, PlayablePlayer} from "../objects/player/playablePlayer";
 import {Mocker, Monster} from "../objects/monsters/mocker";
 import {PlayerData} from "../objects/player/type";
-import {ICharacter, Player} from "../objects/player/player";
+import {INonPlayableCharacter, NonPlayablePlayer} from "../objects/player/nonPlayablePlayer";
 import {LoadPlayerAnimation, LoadPlayerSpriteSheet} from "../objects/player/playerAssetsUtils";
 import {playerExists} from "../utils/players";
 
 export class BlankScene extends Scene {
     cursors: Types.Input.Keyboard.CursorKeys;
     player: IPlayableCharacter;
-    monster: Monster[];
-    otherPlayers: ICharacter[];
+    otherPlayers: INonPlayableCharacter[];
 
     playersSocket: WebSocket;
 
@@ -53,7 +52,7 @@ export class BlankScene extends Scene {
             }
 
             if (!playerExists(this.otherPlayers, playersData[i])) {
-                const player = new Player(this, playersData[i]);
+                const player = new NonPlayablePlayer(this, playersData[i]);
                 player.Create();
                 this.otherPlayers.push(player);
             }
