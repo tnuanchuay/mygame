@@ -3,10 +3,11 @@ import {PlayerData} from "./type";
 import {getHeroModelSet} from "../../assets/hero";
 import {BasePlayer, IPlayer} from "./basePlayer";
 
-export interface INonPlayableCharacter extends IPlayer{
+export interface INonPlayableCharacter extends IPlayer {
+    Update: () => void;
 }
 
-export class NonPlayablePlayer extends BasePlayer implements INonPlayableCharacter{
+export class NonPlayablePlayer extends BasePlayer implements INonPlayableCharacter {
     private nextX: number;
     private nextY: number;
 
@@ -24,10 +25,10 @@ export class NonPlayablePlayer extends BasePlayer implements INonPlayableCharact
     }
 
     public Create(): void {
-        this.sprite = this.scene.physics.add.sprite(this.startX, this.startY, getHeroModelSet(this.modeId).StartSprite);
+        this.sprite = this.scene.physics.add.sprite(this.startX, this.startY, getHeroModelSet(this.modelId).StartSprite);
         this.sprite.setData("type", "other_player");
 
-        this.sprite.anims.play(getHeroModelSet(this.modeId).Idle, true);
+        this.sprite.anims.play(getHeroModelSet(this.modelId).Idle, true);
         this.sprite.setOrigin(0.5, 0.5);
         this.sprite.setCollideWorldBounds(true);
         this.sprite.body.setSize(22, 32, true);
@@ -40,24 +41,16 @@ export class NonPlayablePlayer extends BasePlayer implements INonPlayableCharact
         }
     }
 
-    onPlayerUpdate = (playerData: PlayerData) => {
-        const x = this.sprite.x;
-        const y = this.sprite.y;
-        if(playerData.x != x || playerData.y != y){
-            this.SetPosition(playerData.x, playerData.y);
-        }
-    }
-
-    GetName = (): string => {
+    public GetName = (): string => {
         return this.playerName;
     }
 
-    Update(): void {
+    public Update = () => {
         const x = this.sprite.x;
         const y = this.sprite.y;
 
-        if((x == this.nextX) && (y == this.nextY)){
-            this.sprite.anims.play(getHeroModelSet(this.modeId).Idle, true);
+        if ((x == this.nextX) && (y == this.nextY)) {
+            this.sprite.anims.play(getHeroModelSet(this.modelId).Idle, true);
             this.sprite.setVelocityX(0);
             this.sprite.setVelocityY(0);
             return
@@ -65,8 +58,16 @@ export class NonPlayablePlayer extends BasePlayer implements INonPlayableCharact
         this.move();
     }
 
+    onPlayerUpdate = (playerData: PlayerData) => {
+        const x = this.sprite.x;
+        const y = this.sprite.y;
+        if (playerData.x != x || playerData.y != y) {
+            this.setPosition(playerData.x, playerData.y);
+        }
+    }
+
     move = () => {
-        this.sprite.anims.play(getHeroModelSet(this.modeId).Idle, true);
+        this.sprite.anims.play(getHeroModelSet(this.modelId).Idle, true);
 
         const x = this.sprite.x;
         const y = this.sprite.y;
@@ -74,8 +75,7 @@ export class NonPlayablePlayer extends BasePlayer implements INonPlayableCharact
         console.log("friend move", x, y, "to", this.nextX, this.nextY);
 
         this.handleFlip(x, this.nextX);
-        this.sprite.setX(this.nextX);
-        this.sprite.setY(this.nextY);
+        this.sprite.setPosition(this.nextX, this.nextY);
     }
 
     handleFlip = (x: number, nextX: number) => {
@@ -87,7 +87,7 @@ export class NonPlayablePlayer extends BasePlayer implements INonPlayableCharact
         }
     }
 
-    SetPosition(x: number, y: number) {
+    setPosition = (x: number, y: number) => {
         this.nextX = x;
         this.nextY = y;
     }

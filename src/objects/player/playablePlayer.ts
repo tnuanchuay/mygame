@@ -1,32 +1,25 @@
-import {Physics, Scene, Types} from "phaser";
+import {Scene, Types} from "phaser";
 import {PlayerState} from "./playerState";
 import {createMovementMessage, createSessionMessage} from "../../net/messages";
 import {GetObliqueVelocity} from "../../utils/math";
 import {getHeroModelSet} from "../../assets/hero";
+import {BasePlayer, IPlayer} from "./basePlayer";
 
-export interface IPlayableCharacter {
-    GetName: () => string;
-    Create: () => void;
-    Object: () => Physics.Arcade.Sprite;
+export interface IPlayableCharacter extends IPlayer {
     Update: (cursors: Types.Input.Keyboard.CursorKeys) => void;
 }
 
-export class PlayablePlayer implements IPlayableCharacter {
+export class PlayablePlayer extends BasePlayer implements IPlayableCharacter {
     private readonly speed: number;
-    private readonly playerName: string;
-    private readonly modelId: string;
 
     private lastX: number;
     private lastY: number;
-
-    private readonly scene: Scene;
-    private sprite: Physics.Arcade.Sprite;
 
     private sessionSocket: WebSocket;
     private movementSocket: WebSocket;
 
     constructor(scene: Scene, speed: number) {
-        this.scene = scene;
+        super(scene, "", 0, 0, "")
         this.speed = speed;
         this.playerName = new URL(document.location.href).searchParams.get("name");
         this.modelId = new URL(document.location.href).searchParams.get("modelId");
@@ -34,14 +27,6 @@ export class PlayablePlayer implements IPlayableCharacter {
 
     GetName = (): string => {
         return this.playerName;
-    }
-
-    private handleOnAnimationComplete = () => {
-        this.sprite.on('animationcomplete', () => {
-            if (this.sprite.state === PlayerState.Attack) {
-                this.sprite.setState(PlayerState.Idle);
-            }
-        });
     }
 
     Create = () => {
@@ -60,16 +45,6 @@ export class PlayablePlayer implements IPlayableCharacter {
         this.joinGame();
     }
 
-    private joinGame = () => {
-        this.sessionSocket = new WebSocket("ws://localhost:3000/ws/session")
-        this.sessionSocket.onopen = () => {
-            this.sessionSocket.send(
-                createSessionMessage(this.playerName, this.sprite.x, this.sprite.y, this.modelId));
-        }
-
-        this.movementSocket = new WebSocket("ws://localhost:3000/ws/move");
-    }
-
     Object = () => {
         return this.sprite;
     }
@@ -86,7 +61,30 @@ export class PlayablePlayer implements IPlayableCharacter {
         this.updateToServer();
     }
 
-    private updateToServer = () => {
+    Destroy = () => {
+        this.sprite.removeFromDisplayList();
+        this.sprite.destroy(true);
+    }
+
+    joinGame = () => {
+        this.sessionSocket = new WebSocket("ws://localhost:3000/ws/session")
+        this.sessionSocket.onopen = () => {
+            this.sessionSocket.send(
+                createSessionMessage(this.playerName, this.sprite.x, this.sprite.y, this.modelId));
+        }
+
+        this.movementSocket = new WebSocket("ws://localhost:3000/ws/move");
+    }
+
+    handleOnAnimationComplete = () => {
+        this.sprite.on('animationcomplete', () => {
+            if (this.sprite.state === PlayerState.Attack) {
+                this.sprite.setState(PlayerState.Idle);
+            }
+        });
+    }
+
+    updateToServer = () => {
         if (this.movementSocket.readyState != this.movementSocket.OPEN) {
             return
         }
@@ -100,10 +98,9 @@ export class PlayablePlayer implements IPlayableCharacter {
         }
     }
 
-    private move = (x: number, y: number) => {
+    move = (x: number, y: number) => {
         if (this.sprite.state === PlayerState.Attack) {
-            this.sprite.setVelocityX(0);
-            this.sprite.setVelocityY(0);
+            this.sprite.setVelocity(0, 0);
 
             return
         }
@@ -113,11 +110,10 @@ export class PlayablePlayer implements IPlayableCharacter {
             velocity = GetObliqueVelocity(velocity);
         }
 
-        this.sprite.setVelocityX(x * velocity);
-        this.sprite.setVelocityY(y * velocity);
+        this.sprite.setVelocity(x * velocity, y * velocity);
     }
 
-    private handleFlip = (x: number) => {
+    handleFlip = (x: number) => {
         if (x > 0) {
             this.sprite.flipX = false;
         }
@@ -126,7 +122,7 @@ export class PlayablePlayer implements IPlayableCharacter {
         }
     }
 
-    private getX = (cursors: Types.Input.Keyboard.CursorKeys): number => {
+    getX = (cursors: Types.Input.Keyboard.CursorKeys): number => {
         let x = 0;
         if (cursors.left.isDown) {
             x = x - 1;
@@ -138,7 +134,7 @@ export class PlayablePlayer implements IPlayableCharacter {
         return x;
     }
 
-    private getY = (cursors: Types.Input.Keyboard.CursorKeys): number => {
+    getY = (cursors: Types.Input.Keyboard.CursorKeys): number => {
         let y = 0;
         if (cursors.up.isDown) {
             y = y - 1;
@@ -150,7 +146,7 @@ export class PlayablePlayer implements IPlayableCharacter {
         return y;
     }
 
-    private setAnimation = (x: number, y: number) => {
+    setAnimation = (x: number, y: number) => {
         this.sprite.anims.play(getHeroModelSet(this.modelId).Idle, true);
     }
 }
