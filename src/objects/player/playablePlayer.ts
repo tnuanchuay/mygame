@@ -1,6 +1,5 @@
 import {Physics, Scene, Types} from "phaser";
 import {PlayerState} from "./playerState";
-import {LoadPlayerAnimation, LoadPlayerSpriteSheet} from "./playerAssetsUtils";
 import {createMovementMessage, createSessionMessage} from "../../net/messages";
 import {GetObliqueVelocity} from "../../utils/math";
 import {getHeroModelSet} from "../../assets/hero";
@@ -50,8 +49,6 @@ export class PlayablePlayer implements IPlayableCharacter {
         const h = this.scene.game.canvas.height;
         this.sprite = this.scene.physics.add.sprite(w / 2, h / 2, getHeroModelSet(this.modelId).StartSprite);
         this.sprite.setData("type", "player");
-
-        LoadPlayerAnimation(this.scene);
 
         this.sprite.anims.play(getHeroModelSet(this.modelId).Idle);
         this.sprite.setOrigin(0.5, 0.5);
