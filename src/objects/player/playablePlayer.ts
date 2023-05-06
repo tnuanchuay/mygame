@@ -3,13 +3,13 @@ import {PlayerState} from "./playerState";
 import {createMovementMessage, createSessionMessage} from "../../net/messages";
 import {GetObliqueVelocity} from "../../utils/math";
 import {getHeroModelSet} from "../../assets/hero";
-import {BasePlayer, IPlayer} from "./basePlayer";
+import {Player, IPlayer} from "./player";
 
 export interface IPlayableCharacter extends IPlayer {
     Update: (cursors: Types.Input.Keyboard.CursorKeys) => void;
 }
 
-export class PlayablePlayer extends BasePlayer implements IPlayableCharacter {
+export class PlayablePlayer extends Player implements IPlayableCharacter {
     private readonly speed: number;
 
     private lastX: number;

@@ -7,7 +7,7 @@ export interface IPlayer {
     Destroy: () => void;
 }
 
-export abstract class BasePlayer implements IPlayer {
+export abstract class Player implements IPlayer {
     protected playerName: string;
     protected modelId: string;
     protected startX: number;

@@ -1,13 +1,13 @@
 import {Scene} from "phaser";
 import {PlayerData} from "./type";
 import {getHeroModelSet} from "../../assets/hero";
-import {BasePlayer, IPlayer} from "./basePlayer";
+import {Player, IPlayer} from "./player";
 
 export interface INonPlayableCharacter extends IPlayer {
     Update: () => void;
 }
 
-export class NonPlayablePlayer extends BasePlayer implements INonPlayableCharacter {
+export class NonPlayablePlayer extends Player implements INonPlayableCharacter {
     private nextX: number;
     private nextY: number;
 
