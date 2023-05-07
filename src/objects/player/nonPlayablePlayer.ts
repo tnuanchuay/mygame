@@ -5,26 +5,30 @@ import {Player, IPlayer} from "./player";
 
 export interface INonPlayableCharacter extends IPlayer {
     Update: () => void;
+    GetPlayerData: () => PlayerData;
+    IsDestroyed: () => boolean;
 }
 
 export class NonPlayablePlayer extends Player implements INonPlayableCharacter {
     private nextX: number;
     private nextY: number;
-
+    private isDestroyed: boolean;
     private playerSocket: WebSocket;
 
     constructor(scene: Scene, playerData: PlayerData) {
         super(scene, playerData.playerName, playerData.x, playerData.y, playerData.modelId);
         this.nextX = playerData.x;
         this.nextY = playerData.y;
+        this.isDestroyed = false;
     }
 
-    public Destroy = () => {
+    Destroy = () => {
         this.sprite.removeFromDisplayList();
         this.sprite.destroy(true);
+        this.isDestroyed = true;
     }
 
-    public Create(): void {
+    Create(): void {
         this.sprite = this.scene.physics.add.sprite(this.startX, this.startY, getHeroModelSet(this.modelId).StartSprite);
         this.sprite.setData("type", "other_player");
 
@@ -41,11 +45,11 @@ export class NonPlayablePlayer extends Player implements INonPlayableCharacter {
         }
     }
 
-    public GetName = (): string => {
+    GetName = (): string => {
         return this.playerName;
     }
 
-    public Update = () => {
+    Update = () => {
         const x = this.sprite.x;
         const y = this.sprite.y;
 
@@ -57,6 +61,17 @@ export class NonPlayablePlayer extends Player implements INonPlayableCharacter {
         }
         this.move();
     }
+
+    GetPlayerData = (): PlayerData => {
+        return {
+            playerName: this.playerName,
+            x: this.nextX,
+            y: this.nextY,
+            modelId: this.modelId,
+        }
+    }
+
+    IsDestroyed = (): boolean => this.isDestroyed;
 
     onPlayerUpdate = (playerData: PlayerData) => {
         const x = this.sprite.x;

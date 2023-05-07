@@ -18,9 +18,9 @@ export class BlankScene extends Scene {
         this.otherPlayers = [];
     }
 
-    preload = async () => {
+    preload = () => {
         LoadPlayerSpriteSheet(this);
-        await this.loadPlayersAsync();
+        this.loadPlayersAsync();
     }
 
     create = () => {
@@ -30,39 +30,52 @@ export class BlankScene extends Scene {
     }
 
     loadPlayersAsync = () => {
-        return new Promise<void>((resolve) => {
-            this.playersSocket = new WebSocket("ws://localhost:3000/ws/players");
-            this.playersSocket.onmessage = (ev) => {
-                const playerData = JSON.parse(ev.data) as PlayerData[];
-                this.addNewOtherPlayers(playerData);
-                this.removeDisconnectedPlayer(playerData);
-                resolve();
-            }
-        })
-    }
+        this.playersSocket = new WebSocket("ws://localhost:3000/ws/players");
 
-    addNewOtherPlayers = (playersData: PlayerData[]) => {
-        for (let i = 0; i < playersData.length; i++) {
-            if (playersData[i].playerName === this.player.GetName()) {
-                continue
-            }
-
-            if (!playerExists(this.otherPlayers, playersData[i])) {
-                const player = new NonPlayablePlayer(this, playersData[i]);
-                console.log(player.GetName());
-                player.Create();
-                this.otherPlayers.push(player);
-            }
+        this.playersSocket.onmessage = (ev) => {
+            console.log(ev.data);
+            const playerData = JSON.parse(ev.data) as PlayerData[];
+            this.syncPlayers(playerData);
         }
     }
 
-    removeDisconnectedPlayer = (playerData: PlayerData[]) => {
-        const nameList = playerData.map(i => i.playerName);
-        const removeList = this.otherPlayers.filter(i => nameList.indexOf(i.GetName()) < 0);
-        this.otherPlayers = this.otherPlayers.filter(i => nameList.indexOf(i.GetName()) >= 0);
-        removeList.forEach(i => {
-            i.Destroy();
-        });
+    syncPlayers = (playerData: PlayerData[]) => {
+        const notSelfPlayerData = playerData.filter(player => player.playerName != this.player.GetName());
+        notSelfPlayerData.forEach(player => this.syncPlayer(player));
+    }
+
+    syncPlayer = (remotePlayer: PlayerData) => {
+        const localPlayers = this.otherPlayers.filter(player => player.GetPlayerData().playerName === remotePlayer.playerName);
+        if(localPlayers.length === 0){
+            const player = new NonPlayablePlayer(this, remotePlayer);
+            console.log(player.GetName());
+            player.Create();
+            this.otherPlayers.push(player);
+
+        }else if(localPlayers.length > 1){
+            localPlayers.forEach(player => player.Destroy());
+        }
+        else if(this.needToSync(localPlayers[0].GetPlayerData(), remotePlayer)){
+            localPlayers[0].Destroy();
+        }
+
+        this.otherPlayers = this.otherPlayers.filter(i => !i.IsDestroyed());
+    }
+
+    needToSync = (localPlayer: PlayerData, remotePlayer: PlayerData): boolean => {
+        if(localPlayer.playerName != remotePlayer.playerName){
+            return true
+        }
+
+        if(localPlayer.x != remotePlayer.x){
+            return true
+        }
+
+        if(localPlayer.y != remotePlayer.y){
+            return true
+        }
+
+        return localPlayer.modelId != remotePlayer.modelId;
     }
 
     update = () => {
